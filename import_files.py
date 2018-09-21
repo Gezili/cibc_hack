@@ -77,5 +77,14 @@ def build_provider_info():
            f.write(str(id) + ',\n')
     
     return provider_list_unique
+
+def export_unique_lists():
+    col_Names=["Patient_Family_ID", "Family_Member_ID", "Provider_ID", "Provider_Type", "State_Code", "Date_of_Service", "Procedure_Code","Dollar_Claimed"]
+    data = pandas.read_csv("claims_final.csv", names = col_Names)
+    for name in col_Names:
+        unique_list = data[name].unique()
+        df = pandas.DataFrame(sorted(unique_list), columns = [name])
+        file_name = name+"_unique"+".csv"
+        df.to_csv(file_name, index=False, header=False)
     
     
