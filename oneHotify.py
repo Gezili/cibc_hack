@@ -1,6 +1,7 @@
 import numpy as np
 from keras.utils import to_categorical
-def oneHotify(array):
+def oneHotify(matrix,index):
+    array = matrix[:,index]
     dict_array = {}
     counter = 0
     for i in array:
@@ -13,13 +14,18 @@ def oneHotify(array):
         for i in range(len(array)):
             if value == array[i]:
                 array[i] = key
-    encoded = to_categorical(array)
-    return encoded
-    
+    encoded = to_categorical(array) #encoded returns the OneHot matrix
+    matrix = np.concatenate((matrix,encoded),axis=1) #append the OneHot matrix to the end
+    matrix = np.delete(matrix,index,1) #delete the column of the index
+    return matrix
+
 if __name__ == '__main__':
-    array = ['987425','2431534','100','100','2023']
-    ans = oneHotify(array)
-    print(array)
+    matrix = np.array([[987425,2431534,100,100,2023],
+                       [234534,2332141,100,200,2023],
+                       [234534,2332141,150,200,2023]])
+    index = 2
+    ans = oneHotify(matrix,index)
+    # print(matrix)
     print(ans)
     #output
 #   [0, 1, 2, 2, 3]
