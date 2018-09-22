@@ -4,16 +4,25 @@ def oneHotify(matrix,index):
     array = matrix[:,index]
     dict_array = {}
     counter = 0
+    # for i in array:
+    #     if i not in dict_array.values():
+    #         dict_array[counter] = i
+    #         counter += 1
+    #     else:
+    #         continue
+    # for key, value in dict_array.items():
+    #     for i in range(len(array)):
+    #         if value == array[i]:
+    #             array[i] = key
+    
     for i in array:
-        if i not in dict_array.values():
-            dict_array[counter] = i
+        if i not in dict_array.keys():
+            dict_array[i] = counter
             counter += 1
-        else:
-            continue
-    for key, value in dict_array.items():
-        for i in range(len(array)):
-            if value == array[i]:
-                array[i] = key
+    for k in range(len(array)):
+        array[k] = dict_array[array[k]]
+
+
     encoded = to_categorical(array) #encoded returns the OneHot matrix
     matrix = np.concatenate((matrix,encoded),axis=1) #append the OneHot matrix to the end
     matrix = np.delete(matrix,index,1) #delete the column of the index
