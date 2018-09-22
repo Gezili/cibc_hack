@@ -11,4 +11,11 @@ alpha = [1e-3,1e-2,1e-1,1,1e1,1e2,1e3]
 l1_ratio = [0,0.25,0.5,0.75,1]
 regr = ElasticNet(alpha = alpha, l1_ratio = l1_ratio,max_iter = 1000)
 regr.fit(X_train,y_train)
-y_predict = regr.predict(X_test)
+
+clf = Lasso(alpha = alpha, max_iter = 1000)
+clf.fit(X_train,y_train)
+# clf.coef_ returns nx1 matrix
+
+
+y_predict_regr = regr.predict(X_test)
+y_predict_clf = clf.predict(X_test)
