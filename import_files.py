@@ -133,7 +133,7 @@ def build_provider_relationships():
     
 def find_duplicate_providers():
     
-    data = pandas.read_csv("claims_final.csv")
+    data = pandas.read_csv(directory + r"\claims_final.csv")
     duplicates = data.duplicated()
     
     provider_list_before = pandas.read_csv(directory + r'/Provider_ID_Unique.csv').ix[:,0]
@@ -174,16 +174,13 @@ def find_normalized_providers():
             f.write(str(provider_id[i]) + ',')
             f.write(str(provider_duplicates[i]/provider_count[i]) + '\n')
             
-    
     percentage_duplicates.sort(reverse = True)
     
     with open(directory + r'\procedure_duplicates_sorted.csv', 'a') as f:
         for elem in percentage_duplicates:
             f.write(str(elem[1]) + ',')
             f.write(str(elem[0]) + '\n')
-            
-    
-    
+        
     return percentage_duplicates
     
 def process_normals():
@@ -217,6 +214,48 @@ def process_normals():
             f.write(str(data_var) + ',')
             f.write(str(abs_mean) + '\n')
             
-def match_provider_providertype():
+def find_normalized_euclidean_distances():
     
+    data_eu = pandas.read_csv(directory + r"/mean_euclidean_distance.csv")
+    prov_id = data_eu.ix[:,0]
+    distances = data_eu.ix[:,1]
+    
+    data_orig = pandas.read_csv(directory + r"/provider_mean_std.csv")
+    find_zeros = data_orig.ix[:,1]
+    
+    data_assembled = [(distances[i], prov_id[i]) for i in range(len(prov_id))]
+    
+    for i in range(len(data_orig)):
+        if find_zeros[i] < 0:
+            data_assembled[i] = (0,prov_id[i])
+    
+    data_assembled.sort(reverse = True)
+    
+    with open(directory + r'/final_euclidean_distance_sorted.csv', 'a') as f:
+        for elem in data_assembled:
+            f.write(str(elem[1]) + ',')
+            f.write(str(elem[0]) + '\n')
             
+def generate_list_for_chris():
+    data_eu = pandas.read_csv(directory + r"/final_euclidean_distance_sorted.csv")
+    data_of_interest = data_eu.ix[:,0].tolist()
+    with open(directory + r'/zili_predictions.csv', 'a') as f:
+        for i, elem in enumerate(data_of_interest):
+            f.write(str(elem) + ',')
+            f.write(str(i) + '\n')
+    
+def generate_duplicates_chris():
+    data_eu = pandas.read_csv(directory + r"/procedure_duplicates_sorted.csv")
+    data_of_interest = data_eu.ix[:,0].tolist()
+    with open(directory + r'/dupe_predictions.csv', 'a') as f:
+        for i, elem in enumerate(data_of_interest):
+            f.write(str(elem) + ',')
+            f.write(str(i) + '\n')
+            
+
+
+def sum_cost():
+    data = pandas.read_csv(directory + r"\claims_final.csv")
+    cost = data.ix[:,7]
+    money = np.sum(cost) + 707.08
+    return money
