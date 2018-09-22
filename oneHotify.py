@@ -17,6 +17,7 @@ def oneHotify(matrix,index):
     encoded = to_categorical(array) #encoded returns the OneHot matrix
     matrix = np.concatenate((matrix,encoded),axis=1) #append the OneHot matrix to the end
     matrix = np.delete(matrix,index,1) #delete the column of the index
+    print(len(encoded[0]))
     return matrix
 
 if __name__ == '__main__':
