@@ -1,6 +1,7 @@
 import os
 import sys
 import pandas
+import csv
 from pathlib import Path
 import numpy as np
 
@@ -87,4 +88,36 @@ def export_unique_lists():
         file_name = name+"_unique"+".csv"
         df.to_csv(file_name, index=False, header=False)
     
-    
+def get_z_score():
+
+    col_Names=["Patient_Family_ID", "Family_Member_ID", "Provider_ID", "Provider_Type", "State_Code", "Date_of_Service", "Procedure_Code","Dollar_Claimed"]
+    data = pandas.read_csv("claims_final.csv", names = col_Names)
+    provider_id = pandas.read_csv("Provider_ID_unique.csv", names = ["Provider_ID"])["Provider_ID"].tolist()
+    proc_code_info = pandas.read_csv("procedure_stats.csv")
+    stats_dict = dict()
+    provider_dict = dict()
+    for p_id in provider_id:
+        prov_id_info = np.array(data.loc[data["Provider_ID"] == p_id])
+        provider_dict[p_id] = []
+
+        for p_entries in prov_id_info:
+            proc_code = p_entries[6]
+            cost = p_entries[7]
+
+            if proc_code not in stats_dict.keys():
+                stats = proc_code_info.loc[proc_code_info["procedure_id"] == proc_code]
+                stats_dict[proc_code] = [stats["mean"].values[0]]
+                stats_dict[proc_code].append(stats["stdev"].values[0])
+            
+            [mean, stdev] = stats_dict[proc_code]
+            
+            z_score = (cost-mean)/stdev
+            provider_dict[p_id].append(z_score)
+        print(p_id)   
+
+    export_to_csv(provider_dict)
+
+def export_to_csv(provider_dict):
+    w = csv.writer(open("provider_dict2.csv", "w"))
+    for key, val in provider_dict.items():
+        w.writerow([key, val])
