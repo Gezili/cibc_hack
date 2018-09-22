@@ -16,19 +16,18 @@ for i in range(1,2):
     y_train = load_npz('y_train_' + str(i) + '.npz')
     X_test = load_npz('X_test_' + str(i) + '.npz')
     y_test = load_npz('y_test_' + str(i) + '.npz')
+    y_train = y_train.toarray()
+    y_test = y_test.toarray()
     for alpha in alphas:
         model = Lasso(alpha=alpha)
-        y_train = y_train.toarray()
-        y_test = y_test.toarray()
         model.fit(X_train, y_train)
         y_predict_half = model.predict(X_test)
-
+        model = Lasso(alpha = alpha)
         model.fit(X_test, y_test)
         y_predict = model.predict(X_train)
         
-        y_predict = y_predict.extend(y_predict_half)
+        y_predict = np.concatenate((y_predict,y_predict_half))
         print(len(y_predict))
-        y_predict = np.array(y_predict)
         np.savetxt('Lasso_' + str(alpha) + '.csv', y_predict)
 
 
