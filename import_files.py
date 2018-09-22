@@ -1,7 +1,6 @@
 import os
 import sys
 import pandas
-import csv
 from pathlib import Path
 import numpy as np
 
@@ -87,39 +86,137 @@ def export_unique_lists():
         df = pandas.DataFrame(sorted(unique_list), columns = [name])
         file_name = name+"_unique"+".csv"
         df.to_csv(file_name, index=False, header=False)
+
+def find_provider_patients():
     
-def get_z_score():
+    provider_list = pandas.read_csv(directory + r'/Provider_ID_Unique.csv').ix[:,0]
+    provider_list_unique = [provider_list[i] for i in range(len(provider_list))]
 
-    col_Names=["Patient_Family_ID", "Family_Member_ID", "Provider_ID", "Provider_Type", "State_Code", "Date_of_Service", "Procedure_Code","Dollar_Claimed"]
-    data = pandas.read_csv("claims_final.csv", names = col_Names)
-    provider_id = pandas.read_csv("Provider_ID_unique.csv", names = ["Provider_ID"])["Provider_ID"].tolist()
-    proc_code_info = pandas.read_csv("procedure_stats.csv")
-    stats_dict = dict()
-    provider_dict = dict()
-    for p_id in provider_id:
-        prov_id_info = np.array(data.loc[data["Provider_ID"] == p_id])
-        provider_dict[p_id] = []
+    provider_list = pandas.read_csv(directory + r'/Provider_ID_Unique.csv')
+    provider_list['provider id'].groupby('provider id').count()
 
-        for p_entries in prov_id_info:
-            proc_code = p_entries[6]
-            cost = p_entries[7]
+    sum_providers = np.zeros(len(provider_list_unique), dtype = int)
+    #return sum_providers
+    prov_list = pandas.read_csv(directory + r'/claims_final.csv').ix[:,2]
+    #prov_list = [list[i] for i in range(len(list))]
+    for provider in prov_list:
+        sum_providers[provider_list_unique.index(provider)] += 1
+    return sum_providers
 
-            if proc_code not in stats_dict.keys():
-                stats = proc_code_info.loc[proc_code_info["procedure_id"] == proc_code]
-                stats_dict[proc_code] = [stats["mean"].values[0]]
-                stats_dict[proc_code].append(stats['count'].values[0])
+def build_provider_relationships():
+    '''
+    list = pandas.read_csv(directory + r'/claims_final.csv')
+    provider_list_unique = pandas.read_csv(directory + r'/unique_providers.csv').ix[:,0]
+    procedure_stats = pandas.read_csv(directory + r'/procedure_stats.csv')
+    
+    provider_id = list.ix[:,2]
+    provider_type = list.ix[:,3]
+    cost = list.ix[:,7]
+    
+    id = procedure_stats.ix[:,0]
+    mean = procedure_stats.ix[:,1]
+    std = procedure_stats.ix[:,2]
+    
+    for i in range(len(provider_list_unique)):
+        cost_arr.append([])
+        
+    for i, entry in enumerate():
+        
+        abs_diff = abs(
+        
+        cost_arr[provider_list_unique.index(provider_list[i])].append([
             
-            if stats_dict[proc_code][2] < 100:
-                continue
-            [mean, stdev] = stats_dict[proc_code][0:2]
+        
+        ])
+    '''
+    pass
+    
+def find_duplicate_providers():
+    
+    data = pandas.read_csv("claims_final.csv")
+    duplicates = data.duplicated()
+    
+    provider_list_before = pandas.read_csv(directory + r'/Provider_ID_Unique.csv').ix[:,0]
+    provider_list = [provider_list_before[i] for i in range(len(provider_list_before))]
+    provider_id = data.ix[:,2]
+    duplicate_ids = []
+    for i in range(len(data)):
+        if duplicates[i] == True:
+            duplicate_ids.append(provider_id[i])
+    #print(duplicate_ids)
+    sum_providers = np.zeros(len(provider_list), dtype = int)
+    
+    for provider in duplicate_ids:
+        sum_providers[provider_list.index(provider)] += 1
+    
+    with open(directory + r'\procedure_duplicates.csv', 'a') as f:
+        for i in range(len(duplicate_ids)):    
+            f.write(str(provider_list[i]) + ',')
+            f.write(str(sum_providers[i]) + '\n')
+    
+    return sum_providers
+    
+def find_normalized_providers():
+    
+    data_absolute = pandas.read_csv(directory + r"/group_by_provider.csv")
+    data_duplicates = pandas.read_csv(directory + r"/procedure_duplicates.csv")
+    
+    #return data_absolute.ix[:,0], data_duplicates.ix[:,0]
+    provider_id = data_absolute.ix[:,0]
+    provider_count = data_absolute.ix[:,1]
+    provider_duplicates = data_duplicates.ix[:,1]
+
+    percentage_duplicates = []
+    with open(directory + r'\procedure_duplicates_percentage.csv', 'a') as f:
+        for i in range(len(provider_count)):
+            percentage_duplicates.append((provider_duplicates[i]/provider_count[i], provider_id[i]))
             
-            z_score = (cost-mean)/stdev
-            provider_dict[p_id].append(z_score)
-        print(p_id)   
-
-    export_to_csv(provider_dict)
-
-def export_to_csv(provider_dict):
-    w = csv.writer(open("z_scores.csv", "w"))
-    for key, val in provider_dict.items():
-        w.writerow([key, val])
+            f.write(str(provider_id[i]) + ',')
+            f.write(str(provider_duplicates[i]/provider_count[i]) + '\n')
+            
+    
+    percentage_duplicates.sort(reverse = True)
+    
+    with open(directory + r'\procedure_duplicates_sorted.csv', 'a') as f:
+        for elem in percentage_duplicates:
+            f.write(str(elem[1]) + ',')
+            f.write(str(elem[0]) + '\n')
+            
+    
+    
+    return percentage_duplicates
+    
+def process_normals():
+    
+    data_z = pandas.read_csv(directory + r"/z_scores.csv")
+    provider_id = data_z.ix[:,0]
+    z_values = data_z.ix[:,1]
+    
+    with open(directory + r'\provider_mean_std.csv', 'a') as f:
+        for i, provider in enumerate(provider_id):
+            abs_mean = -1
+            data_var = -1
+            data = z_values[i].split(',')
+            if len(data) > 0:
+    
+                data[0] = data[0][1:]
+                data_replace = data[len(data) - 1]
+                data[len(data) - 1] = data_replace[:len(data_replace) - 1]
+                data = [float(data[i]) for i in range(len(data) - 1)]
+                
+                data_var = np.var(data)
+                abs_mean = 0
+                for i in range(len(data)):
+                    abs_mean += abs(data[i])
+                try:
+                    abs_mean = abs_mean/len(data)
+                except ZeroDivisionError:
+                    abs_mean = -1
+                    data_var = -1
+            f.write(str(provider) + ',')
+            f.write(str(data_var) + ',')
+            f.write(str(abs_mean) + '\n')
+            
+def match_provider_providertype():
+    
+            
