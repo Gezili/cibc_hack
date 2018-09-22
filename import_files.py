@@ -107,9 +107,11 @@ def get_z_score():
             if proc_code not in stats_dict.keys():
                 stats = proc_code_info.loc[proc_code_info["procedure_id"] == proc_code]
                 stats_dict[proc_code] = [stats["mean"].values[0]]
-                stats_dict[proc_code].append(stats["stdev"].values[0])
+                stats_dict[proc_code].append(stats['count'].values[0])
             
-            [mean, stdev] = stats_dict[proc_code]
+            if stats_dict[proc_code][2] < 100:
+                continue
+            [mean, stdev] = stats_dict[proc_code][0:2]
             
             z_score = (cost-mean)/stdev
             provider_dict[p_id].append(z_score)
@@ -118,6 +120,6 @@ def get_z_score():
     export_to_csv(provider_dict)
 
 def export_to_csv(provider_dict):
-    w = csv.writer(open("provider_dict2.csv", "w"))
+    w = csv.writer(open("z_scores.csv", "w"))
     for key, val in provider_dict.items():
         w.writerow([key, val])
